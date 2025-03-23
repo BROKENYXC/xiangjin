@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLANC焊接停机分析 - 合肥祥晋生技部数据管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .analysis-container {
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .analysis-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            margin-right: 1rem;
+        }
+        
+        .device-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .device-btn {
+            padding: 0.5rem 1rem;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        
+        .device-btn.active {
+            background-color: #2c3e50;
+        }
+        
+        .coming-soon {
+            text-align: center;
+            padding: 3rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .coming-soon h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .coming-soon p {
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>BLANC焊接 - 停机异常分析</h1>
+            <p>可视化显示BLANC焊接生产线的停机异常数据</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="top-links">
+            <a href="{{ url_for('index') }}" class="back-btn">返回首页</a>
+            <a href="{{ url_for('fault_analysis') }}" class="back-btn">返回故障分析</a>
+            <div class="device-links">
+                <a href="{{ url_for('dom_threshold_analysis') }}" class="device-btn">DOM门槛</a>
+                <a href="{{ url_for('dom_welding_analysis') }}" class="device-btn">DOM焊接</a>
+                <a href="{{ url_for('blanc_threshold_analysis') }}" class="device-btn">BLANC门槛</a>
+                <a href="{{ url_for('blanc_welding_analysis') }}" class="device-btn active">BLANC焊接</a>
+            </div>
+        </div>
+        
+        <div class="analysis-container">
+            <div class="analysis-header">
+                <h2>BLANC焊接停机异常分析图表</h2>
+            </div>
+            
+            <div class="coming-soon">
+                <h3>数据分析正在开发中</h3>
+                <p>BLANC焊接生产线的停机异常分析功能正在开发中，敬请期待。您可以先查看DOM门槛或DOM焊接的分析数据。</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 合肥祥晋生技部数据管理系统 版权所有</p>
+        </div>
+    </footer>
+</body>
+</html> 

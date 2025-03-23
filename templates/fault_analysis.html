@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>异常停机分析 - 工业数据管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .analysis-container {
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .analysis-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        
+        .analysis-form {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .results-container {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-top: 2rem;
+        }
+        
+        .result-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-desc {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-solution {
+            background-color: #f0f7ff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .device-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .device-btn {
+            padding: 0.5rem 1rem;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>异常停机分析</h1>
+            <p>快速诊断故障原因，提供解决方案</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="top-links">
+            <a href="{{ url_for('index') }}" class="back-btn">返回首页</a>
+            <div class="device-links">
+                <a href="{{ url_for('dom_threshold_analysis') }}" class="device-btn">DOM门槛</a>
+                <a href="{{ url_for('dom_welding_analysis') }}" class="device-btn">DOM焊接</a>
+                <a href="{{ url_for('blanc_threshold_analysis') }}" class="device-btn">BLANC门槛</a>
+                <a href="{{ url_for('blanc_welding_analysis') }}" class="device-btn">BLANC焊接</a>
+            </div>
+        </div>
+        
+        <div class="analysis-container">
+            <div class="analysis-header">
+                <h2>故障分析系统</h2>
+                <p>输入设备信息和故障现象，系统将提供可能的原因和解决方案</p>
+            </div>
+            
+            <div class="analysis-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="equipment">设备名称</label>
+                        <select id="equipment">
+                            <option value="">请选择设备</option>
+                            <option value="dom-threshold">DOM门槛</option>
+                            <option value="dom-welding">DOM焊接</option>
+                            <option value="blanc-threshold">BLANC门槛</option>
+                            <option value="blanc-welding">BLANC焊接</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fault-type">故障类型</label>
+                        <select id="fault-type">
+                            <option value="">请选择故障类型</option>
+                            <option value="operation-error">操作不当</option>
+                            <option value="mechanical">机械故障</option>
+                            <option value="ng">NG</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fault-desc">故障描述</label>
+                    <textarea id="fault-desc" rows="4" placeholder="请详细描述故障现象..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fault-time">故障发生时间</label>
+                        <input type="datetime-local" id="fault-time">
+                    </div>
+                    <div class="form-group">
+                        <label for="urgency">紧急程度</label>
+                        <select id="urgency">
+                            <option value="low">低</option>
+                            <option value="medium">中</option>
+                            <option value="high">高</option>
+                            <option value="critical">紧急</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn-primary">开始分析</button>
+            </div>
+            
+            <div class="results-container">
+                <div class="result-item">
+                    <div class="result-title">可能原因：电机过载</div>
+                    <div class="result-desc">由于长时间高负荷运行，电机温度过高导致保护装置触发停机。</div>
+                    <div class="result-solution">
+                        <strong>解决方案：</strong> 检查电机散热系统，降低负荷运行，必要时更换散热风扇或考虑更高功率等级的电机。
+                    </div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-title">可能原因：传感器故障</div>
+                    <div class="result-desc">位置传感器数据异常，导致控制系统收到错误信号而停机。</div>
+                    <div class="result-solution">
+                        <strong>解决方案：</strong> 检查并校准传感器，如发现损坏则更换同型号传感器，并重新调试系统。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 合肥祥晋生技部数据管理系统 版权所有</p>
+        </div>
+    </footer>
+</body>
+</html> 

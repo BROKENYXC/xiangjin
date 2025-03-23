@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备品备件库 - 祥晋自动化设备数据管理系统</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            height: 50px;
+            z-index: 100;
+        }
+        
+        header {
+            position: relative;
+            padding-left: 80px;
+        }
+        
+        .spare-parts-container {
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+        
+        .spare-parts-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .search-btn {
+            padding: 0.5rem 1rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .search-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .parts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .parts-table th,
+        .parts-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .parts-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .parts-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        
+        .status-normal {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 1.5rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .urgent-list {
+            margin: 1rem 0;
+        }
+        
+        .urgent-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .urgent-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="祥晋Logo" class="logo">
+    <header>
+        <div class="container">
+            <h1>备品备件库</h1>
+            <p>智能管理备品备件，确保设备维护效率</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="{{ url_for('index') }}" class="back-btn">返回首页</a>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="spare-parts-container">
+            <div class="spare-parts-header">
+                <h2>备件管理</h2>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索备件名称、型号或规格...">
+                <button class="search-btn" onclick="searchParts()">
+                    <i class="fas fa-search"></i>
+                    搜索
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table class="parts-table" id="partsTable">
+                    <thead>
+                        <tr>
+                            <th>备件名称</th>
+                            <th>型号</th>
+                            <th>规格</th>
+                            <th>库存数量</th>
+                            <th>最小库存</th>
+                            <th>单位</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for part in parts %}
+                            <tr>
+                                <td>{{ part['备件名称'] }}</td>
+                                <td>{{ part['型号'] }}</td>
+                                <td>{{ part['规格'] }}</td>
+                                <td>{{ part['数量'] }}</td>
+                                <td>{{ part['最小库存'] }}</td>
+                                <td>{{ part['单位'] }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ part['status'] }}">
+                                        {% if part['status'] == 'normal' %}
+                                            库存充足
+                                        {% elif part['status'] == 'warning' %}
+                                            库存偏低
+                                        {% else %}
+                                            需要补货
+                                        {% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 库存告急提醒弹窗 -->
+    <div id="urgentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> 库存告急提醒</h3>
+            </div>
+            <div class="modal-body">
+                <p>以下备件库存低于最小库存量，请及时补货：</p>
+                <div class="urgent-list">
+                    {% for part in urgent_parts %}
+                        <div class="urgent-item">
+                            <strong>{{ part['备件名称'] }}</strong> ({{ part['型号'] }})
+                            <br>
+                            当前库存：{{ part['数量'] }} {{ part['单位'] }}，最小库存：{{ part['最小库存'] }} {{ part['单位'] }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 祥晋自动化设备数据管理系统 版权所有</p>
+        </div>
+    </footer>
+
+    <script>
+        // 页面加载完成后检查是否有库存告急的备件
+        window.onload = function() {
+            {% if urgent_parts %}
+                document.getElementById('urgentModal').style.display = 'block';
+            {% endif %}
+        };
+        
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('urgentModal').style.display = 'none';
+        }
+        
+        // 点击弹窗外部关闭弹窗
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        };
+        
+        // 搜索功能
+        function searchParts() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const table = document.getElementById('partsTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < 3; j++) { // 只搜索前三列（名称、型号、规格）
+                    if (cells[j].textContent.toLowerCase().includes(searchInput)) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                row.style.display = found ? '' : 'none';
+            }
+        }
+        
+        // 为搜索输入框添加回车键监听
+        document.getElementById('searchInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                searchParts();
+            }
+        });
+    </script>
+</body>
+</html>

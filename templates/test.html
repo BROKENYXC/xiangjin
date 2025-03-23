@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面 - 祥晋自动化设备数据管理系统</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- 使用多个CDN源，确保至少一个可用 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script>
+        // 如果第一个CDN加载失败，尝试第二个
+        if (typeof echarts === 'undefined') {
+            var script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js";
+            document.head.appendChild(script);
+        }
+    </script>
+    <style>
+        .test-container {
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            max-width: 1400px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .time-display {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 600px;
+            margin-top: 2rem;
+        }
+        
+        .refresh-info {
+            text-align: right;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="header">
+            <h1>DOM门槛实时节拍数据测试</h1>
+            <div class="time-display">
+                当前时间：<span id="current-time">{{ now.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            </div>
+        </div>
+        
+        <div class="chart-container" id="chart-container">
+        </div>
+        
+        <div class="refresh-info">
+            数据每5秒自动更新一次
+        </div>
+    </div>
+
+    <script>
+        // 等待ECharts加载完成
+        function waitForECharts(callback, maxAttempts = 10) {
+            let attempts = 0;
+            const checkECharts = () => {
+                if (typeof echarts !== 'undefined') {
+                    callback();
+                    return;
+                }
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(checkECharts, 100);
+                } else {
+                    console.error('ECharts加载失败');
+                }
+            };
+            checkECharts();
+        }
+
+        // 初始化图表
+        let myChart = null;
+        
+        // 更新图表数据
+        function updateChart(data) {
+            if (!myChart) {
+                myChart = echarts.init(document.getElementById('chart-container'));
+            }
+            
+            const option = {
+                title: {
+                    text: 'DOM门槛实时节拍数据'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        let result = params[0].axisValue + '<br/>';
+                        params.forEach(param => {
+                            result += param.seriesName + ': ' + param.value + '秒<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['DOM左门槛', 'DOM右门槛'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.time_points,
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '节拍(秒)',
+                    min: 60,
+                    max: 90,
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: [
+                    {
+                        name: 'DOM左门槛',
+                        type: 'line',
+                        data: data.dom_left_data,
+                        smooth: true,
+                        showSymbol: false
+                    },
+                    {
+                        name: 'DOM右门槛',
+                        type: 'line',
+                        data: data.dom_right_data,
+                        smooth: true,
+                        showSymbol: false
+                    }
+                ],
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: true,
+                        start: 99,
+                        end: 100
+                    },
+                    {
+                        type: 'inside',
+                        start: 99,
+                        end: 100
+                    }
+                ]
+            };
+            
+            myChart.setOption(option);
+        }
+        
+        // 更新时间显示
+        function updateTime(time) {
+            document.getElementById('current-time').textContent = time;
+        }
+        
+        // 获取新数据
+        function fetchData() {
+            fetch('/get_dom_data')
+                .then(response => response.json())
+                .then(data => {
+                    updateChart(data);
+                    updateTime(data.current_time);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        
+        // 等待ECharts加载完成后初始化
+        waitForECharts(() => {
+            // 初始加载数据
+            fetchData();
+            
+            // 每5秒更新一次数据
+            setInterval(fetchData, 5000);
+            
+            // 窗口大小改变时重绘图表
+            window.addEventListener('resize', function() {
+                if (myChart) {
+                    myChart.resize();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

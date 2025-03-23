@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据可视化大屏 - 祥晋自动化设备数据管理系统</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            height: 50px;
+            z-index: 100;
+        }
+        
+        header {
+            position: relative;
+            padding-left: 80px;
+        }
+        
+        .dashboard {
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dashboard-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-box {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 1.5rem;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px dashed #ddd;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #007bff;
+        }
+        
+        .chart-box p {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .chart-box .status {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+        }
+        
+        .chart-box .status.running {
+            color: #28a745;
+        }
+        
+        .chart-box .status.warning {
+            color: #ffc107;
+        }
+        
+        .chart-box .status.error {
+            color: #dc3545;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #007bff;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="祥晋Logo" class="logo">
+    <header>
+        <div class="container">
+            <h1>数据可视化大屏</h1>
+            <p>实时监控生产数据，直观展示核心指标</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="{{ url_for('index') }}" class="back-btn">返回首页</a>
+        
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <h2>生产数据可视化</h2>
+            </div>
+            
+            <div class="chart-container">
+                <a href="{{ url_for('static', filename='BigDataView/BigDataView_main/shebei_view.html') }}" class="chart-box" target="_blank">
+                    <i class="fas fa-desktop chart-icon"></i>
+                    <p>设备运行状态图</p>
+                    <div class="status running">
+                        <i class="fas fa-circle"></i> 设备运行正常
+                    </div>
+                </a>
+                <div class="chart-box">
+                    <i class="fas fa-chart-line chart-icon"></i>
+                    <p>产能趋势图</p>
+                    <div class="status warning">
+                        <i class="fas fa-circle"></i> 功能开发中
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <i class="fas fa-bolt chart-icon"></i>
+                    <p>能耗分析图</p>
+                    <div class="status warning">
+                        <i class="fas fa-circle"></i> 功能开发中
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <i class="fas fa-chart-bar chart-icon"></i>
+                    <p>质量控制图</p>
+                    <div class="status warning">
+                        <i class="fas fa-circle"></i> 功能开发中
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 祥晋自动化设备数据管理系统 版权所有</p>
+        </div>
+    </footer>
+</body>
+</html> 

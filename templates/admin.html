@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 祥晋自动化设备数据管理系统</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        .admin-container {
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .admin-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid #3498db;
+            color: #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .user-table, .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .user-table th, .user-table td,
+        .log-table th, .log-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .user-table th, .log-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .user-actions, .role-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-save {
+            padding: 0.3rem 0.8rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .role-select {
+            padding: 0.3rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+        
+        .flash-message {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .search-box {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .modal-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>管理后台</h1>
+            <p>系统管理与监控</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="{{ url_for('index') }}" class="back-btn">返回首页</a>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="admin-container">
+            <div class="admin-header">
+                <h2>系统管理</h2>
+                <div>
+                    <span>当前管理员：{{ session['user']['fullname'] }}</span>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="users">用户管理</div>
+                <div class="tab" data-tab="logs">系统日志</div>
+            </div>
+            
+            <div class="tab-content active" id="users-tab">
+                <div class="user-actions" style="margin-bottom: 1.5rem;">
+                    <button class="action-btn primary" onclick="openModal('add-user-modal')">
+                        <i class="fa fa-user-plus"></i> 添加用户
+                    </button>
+                    <button class="action-btn" onclick="exportUserList()">
+                        <i class="fa fa-download"></i> 导出用户列表
+                    </button>
+                </div>
+                
+                <input type="text" id="user-search" class="search-box" placeholder="搜索用户...">
+                
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>姓名</th>
+                            <th>邮箱</th>
+                            <th>角色</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.fullname }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ '管理员' if user.role == 'admin' else '普通用户' }}</td>
+                                <td>
+                                    <div class="user-actions">
+                                        <form method="post" action="{{ url_for('change_role') }}" class="role-selector">
+                                            <input type="hidden" name="username" value="{{ user.username }}">
+                                            <select name="role" class="role-select">
+                                                <option value="admin" {{ 'selected' if user.role == 'admin' else '' }}>管理员</option>
+                                                <option value="user" {{ 'selected' if user.role == 'user' else '' }}>普通用户</option>
+                                            </select>
+                                            <button type="submit" class="btn-save">保存</button>
+                                        </form>
+                                        <button class="action-btn" onclick="resetPasswordModal('{{ user.username }}')">
+                                            <i class="fa fa-key"></i> 重置密码
+                                        </button>
+                                        {% if user.role != 'admin' or session['user']['username'] == user.username %}
+                                        <button class="action-btn" onclick="confirmDeleteUser('{{ user.username }}', '{{ user.role }}')">
+                                            <i class="fa fa-trash"></i> 删除
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="tab-content" id="logs-tab">
+                <div class="user-actions" style="margin-bottom: 1.5rem;">
+                    <button class="action-btn primary" onclick="exportLogs()">
+                        <i class="fa fa-download"></i> 导出日志
+                    </button>
+                </div>
+                <input type="text" id="log-search" class="search-box" placeholder="搜索日志...">
+                
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>用户</th>
+                            <th>操作</th>
+                            <th>详情</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp }}</td>
+                                <td>{{ log.username }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.details }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加用户模态框 -->
+    <div id="add-user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('add-user-modal')">&times;</span>
+            <div class="modal-header">
+                <h3>添加新用户</h3>
+            </div>
+            <div class="modal-body">
+                <form id="add-user-form" method="post" action="{{ url_for('add_user') }}">
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fullname">姓名</label>
+                        <input type="text" id="fullname" name="fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">角色</label>
+                        <select name="role" id="role" class="role-select">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('add-user-modal')">取消</button>
+                        <button type="submit" class="btn btn-primary">添加</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置密码模态框 -->
+    <div id="reset-password-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('reset-password-modal')">&times;</span>
+            <div class="modal-header">
+                <h3>重置密码</h3>
+            </div>
+            <div class="modal-body">
+                <form id="reset-password-form" method="post" action="{{ url_for('reset_password') }}">
+                    <input type="hidden" id="reset-username" name="username">
+                    <div class="form-group">
+                        <label for="new-password">新密码</label>
+                        <input type="password" id="new-password" name="password" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('reset-password-modal')">取消</button>
+                        <button type="submit" class="btn btn-primary">确认重置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除用户确认模态框 -->
+    <div id="delete-user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('delete-user-modal')">&times;</span>
+            <div class="modal-header">
+                <h3>确认删除用户</h3>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除以下用户吗？此操作不可撤销。</p>
+                <p id="delete-user-name" style="font-weight: bold; margin: 1rem 0;"></p>
+                <form id="delete-user-form" method="post" action="{{ url_for('delete_user') }}">
+                    <input type="hidden" id="delete-username" name="username">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('delete-user-modal')">取消</button>
+                        <button type="submit" class="btn btn-danger">确认删除</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 合肥祥晋生技部数据管理系统 版权所有</p>
+        </div>
+    </footer>
+    
+    <script>
+        // 标签页切换
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // 移除所有活动状态
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // 激活当前标签
+                tab.classList.add('active');
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+        
+        // 用户搜索功能
+        const userSearch = document.getElementById('user-search');
+        userSearch.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const userRows = document.querySelectorAll('.user-table tbody tr');
+            
+            userRows.forEach(row => {
+                const username = row.cells[0].textContent.toLowerCase();
+                const fullname = row.cells[1].textContent.toLowerCase();
+                const email = row.cells[2].textContent.toLowerCase();
+                
+                if (username.includes(searchTerm) || fullname.includes(searchTerm) || email.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // 日志搜索功能
+        const logSearch = document.getElementById('log-search');
+        logSearch.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const logRows = document.querySelectorAll('.log-table tbody tr');
+            
+            logRows.forEach(row => {
+                const timestamp = row.cells[0].textContent.toLowerCase();
+                const username = row.cells[1].textContent.toLowerCase();
+                const action = row.cells[2].textContent.toLowerCase();
+                const details = row.cells[3].textContent.toLowerCase();
+                
+                if (timestamp.includes(searchTerm) || username.includes(searchTerm) || 
+                    action.includes(searchTerm) || details.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // 模态框操作
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // 重置密码模态框
+        function resetPasswordModal(username) {
+            document.getElementById('reset-username').value = username;
+            openModal('reset-password-modal');
+        }
+
+        // 删除用户确认
+        function confirmDeleteUser(username, role) {
+            // 管理员检查
+            if (role === 'admin' && "{{ session['user']['role'] }}" === 'admin' && "{{ session['user']['username'] }}" !== username) {
+                alert('您没有权限删除其他管理员账户');
+                return;
+            }
+            
+            document.getElementById('delete-username').value = username;
+            document.getElementById('delete-user-name').textContent = username;
+            openModal('delete-user-modal');
+        }
+
+        // 导出用户列表
+        function exportUserList() {
+            window.location.href = "{{ url_for('export_users') }}";
+        }
+
+        // 导出日志
+        function exportLogs() {
+            window.location.href = "{{ url_for('export_logs') }}";
+        }
+
+        // 关闭模态框的事件
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 

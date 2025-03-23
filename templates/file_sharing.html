@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件共享管理 - 祥晋自动化设备数据管理系统</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        /* 顶部栏样式 */
+        .top-bar {
+            background-color: #2c3e50;
+            padding: 0.5rem 0;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .top-bar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        .system-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .user-info .user-name {
+            margin-right: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .login-btn, .logout-btn, .admin-btn {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        
+        .login-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .admin-btn {
+            background-color: #1abc9c;
+            color: white;
+            margin-right: 0.5rem;
+        }
+        
+        header {
+            margin-top: 50px;
+        }
+        
+        /* 文件管理样式 */
+        .file-manager {
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        
+        .path-nav {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .path-item {
+            display: inline-flex;
+            align-items: center;
+            color: #666;
+            text-decoration: none;
+        }
+        
+        .path-separator {
+            margin: 0 0.5rem;
+            color: #999;
+        }
+        
+        .file-actions {
+            display: flex;
+            margin-bottom: 1rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #333;
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .action-btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .action-btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        .action-btn.primary {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .action-btn.primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .view-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .view-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .view-btn {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+        }
+        
+        .view-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .sort-options {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sort-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .sort-select {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+        
+        /* 文件列表样式 */
+        .file-list {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        
+        .file-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        
+        .file-item-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .file-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        
+        .file-icon.folder {
+            color: #f39c12;
+        }
+        
+        .file-icon.file {
+            color: #3498db;
+        }
+        
+        .file-icon.doc, .file-icon.docx {
+            color: #3498db;
+        }
+        
+        .file-icon.pdf {
+            color: #e74c3c;
+        }
+        
+        .file-icon.jpg, .file-icon.jpeg, .file-icon.png, .file-icon.gif {
+            color: #9b59b6;
+        }
+        
+        .file-icon.xls, .file-icon.xlsx {
+            color: #2ecc71;
+        }
+        
+        .file-details {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .file-meta {
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+        
+        .file-action-btn {
+            padding: 0.3rem 0.6rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .file-action-btn i {
+            margin-right: 0.3rem;
+        }
+        
+        .file-action-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .file-action-btn.primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .file-action-btn.primary:hover {
+            background-color: #2980b9;
+        }
+        
+        /* 网格视图样式 */
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+        }
+        
+        .grid-item {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .grid-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .grid-item .file-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.5rem;
+            font-size: 2rem;
+        }
+        
+        .grid-item .file-name {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+            justify-content: center;
+        }
+        
+        .grid-item .file-meta {
+            font-size: 0.75rem;
+            justify-content: center;
+        }
+        
+        .grid-actions {
+            position: absolute;
+            top: 0.3rem;
+            right: 0.3rem;
+            display: none;
+        }
+        
+        .grid-item:hover .grid-actions {
+            display: block;
+        }
+        
+        .grid-action-btn {
+            padding: 0.15rem;
+            font-size: 0.7rem;
+            margin-left: 0.2rem;
+            border-radius: 3px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
+            cursor: pointer;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            margin: 10% auto;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        /* 上传功能样式 */
+        .file-upload {
+            display: flex;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px dashed #ddd;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .file-upload.active {
+            display: flex;
+        }
+        
+        .file-upload.highlight {
+            border-color: #3498db;
+            background-color: #e3f2fd;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 2rem;
+            color: #3498db;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-text {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+        
+        .flash-message {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="top-bar-container">
+            <div class="system-name">工业数据管理系统</div>
+            <div class="user-info">
+                {% if session.get('user') %}
+                    <div class="user-avatar">{{ session['user']['username'][0].upper() }}</div>
+                    <div class="user-name">{{ session['user']['fullname'] }}</div>
+                    {% if session['user']['role'] == 'admin' %}
+                        <a href="{{ url_for('admin_panel') }}" class="admin-btn">管理后台</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="logout-btn">退出</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="login-btn">登录</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="container">
+            <h1>文件共享管理</h1>
+            <p>高效管理和分享工业文档与技术资料</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="{{ url_for('index') }}" class="back-btn">返回首页</a>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="file-manager">
+            <div class="file-header">
+                <h2>文件管理系统</h2>
+                <div>
+                    <span>当前用户：{{ session['user']['fullname'] }}</span>
+                </div>
+            </div>
+            
+            <div class="path-nav">
+                {% for crumb in breadcrumbs %}
+                    {% if not loop.last %}
+                        <a href="{{ url_for('file_sharing', path=crumb.path) }}" class="path-item">
+                            {% if loop.first %}
+                                <i class="fa fa-home"></i>
+                                <span style="margin-left: 0.3rem;">{{ crumb.name }}</span>
+                            {% else %}
+                                <span>{{ crumb.name }}</span>
+                            {% endif %}
+                        </a>
+                        <span class="path-separator">/</span>
+                    {% else %}
+                        <span class="path-item">{{ crumb.name }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="file-actions">
+                <button class="action-btn" onclick="showUploadArea()">
+                    <i class="fa fa-upload"></i> 上传文件
+                </button>
+                <button class="action-btn" onclick="openNewFolderModal()">
+                    <i class="fa fa-folder"></i> 新建文件夹
+                </button>
+                <button class="action-btn primary" onclick="refreshFileList()">
+                    <i class="fa fa-refresh"></i> 刷新
+                </button>
+            </div>
+            
+            <div class="file-upload" id="upload-area">
+                <i class="fa fa-cloud-upload upload-icon"></i>
+                <div class="upload-text">
+                    <p>拖放文件到此处或点击上传</p>
+                    <p style="font-size: 0.8rem; color: #888">支持的文件类型: PDF, Word, Excel, 图片等</p>
+                </div>
+                <form method="post" action="{{ url_for('upload_file') }}" enctype="multipart/form-data" id="upload-form">
+                    <input type="file" id="file-input" name="file">
+                    <div class="upload-buttons">
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                            选择文件
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="hideUploadArea()">取消</button>
+                    </div>
+                    <p id="selected-file" style="margin-top: 0.5rem; font-size: 0.9rem;"></p>
+                    <button type="submit" id="upload-btn" style="display: none; margin-top: 0.5rem;" class="btn btn-primary">上传文件</button>
+                </form>
+            </div>
+            
+            <div class="view-options">
+                <div class="view-btns">
+                    <button class="view-btn active" data-view="list" onclick="switchView('list')">
+                        <i class="fa fa-list"></i> 列表视图
+                    </button>
+                    <button class="view-btn" data-view="grid" onclick="switchView('grid')">
+                        <i class="fa fa-th"></i> 网格视图
+                    </button>
+                </div>
+                <div class="sort-options">
+                    <span class="sort-label">排序:</span>
+                    <select class="sort-select" id="sort-select" onchange="sortFiles()">
+                        <option value="name-asc">名称 (A-Z)</option>
+                        <option value="name-desc">名称 (Z-A)</option>
+                        <option value="date-desc">最新修改</option>
+                        <option value="date-asc">最早修改</option>
+                        <option value="size-desc">大小 (大-小)</option>
+                        <option value="size-asc">大小 (小-大)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="file-list" id="file-list-view">
+                {% if files %}
+                    {% for file in files %}
+                        <div class="file-item" data-name="{{ file.name }}" data-size="{{ file.size }}" data-modified="{{ file.modified }}">
+                            <div class="file-item-info">
+                                <div class="file-icon {{ file.type.lower() if file.type else 'file' }}">
+                                    {% if file.type.lower() in ['doc', 'docx'] %}
+                                        <i class="fa fa-file-word-o"></i>
+                                    {% elif file.type.lower() == 'pdf' %}
+                                        <i class="fa fa-file-pdf-o"></i>
+                                    {% elif file.type.lower() in ['xls', 'xlsx'] %}
+                                        <i class="fa fa-file-excel-o"></i>
+                                    {% elif file.type.lower() in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                        <i class="fa fa-file-image-o"></i>
+                                    {% elif file.type.lower() == 'folder' %}
+                                        <i class="fa fa-folder"></i>
+                                    {% else %}
+                                        <i class="fa fa-file-o"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="file-details">
+                                    <div class="file-name">
+                                        {% if file.type.lower() == 'folder' %}
+                                            <a href="{{ url_for('file_sharing', path=file.path) }}" style="color: inherit; text-decoration: none;">
+                                                {{ file.name }}
+                                            </a>
+                                        {% else %}
+                                            {{ file.name }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="file-meta">
+                                        <span>大小: {{ (file.size / 1024)|round(1) }} KB</span>
+                                        <span>修改时间: {{ file.modified }}</span>
+                                        <span>类型: {{ file.type }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                {% if file.type.lower() == 'folder' %}
+                                    <a href="{{ url_for('file_sharing', path=file.path) }}" class="file-action-btn primary">
+                                        <i class="fa fa-folder-open"></i> 打开
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('preview_file', filepath=file.path) }}" class="file-action-btn primary">
+                                        <i class="fa fa-eye"></i> 预览
+                                    </a>
+                                {% endif %}
+                                {% if file.type.lower() != 'folder' %}
+                                    <a href="{{ url_for('download_file', filepath=file.path) }}" class="file-action-btn">
+                                        <i class="fa fa-download"></i> 下载
+                                    </a>
+                                {% endif %}
+                                <button class="file-action-btn" onclick="deleteFile('{{ file.path }}')">
+                                    <i class="fa fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-files" style="padding: 2rem; text-align: center; color: #888;">
+                        <i class="fa fa-folder-open-o" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>当前目录为空，请上传文件或创建文件夹</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="files-grid" id="grid-view" style="display: none;">
+                {% if files %}
+                    {% for file in files %}
+                        <div class="grid-item" data-name="{{ file.name }}" data-size="{{ file.size }}" data-modified="{{ file.modified }}" onclick="previewFile('{{ file.name }}')">
+                            <div class="grid-actions">
+                                <button class="grid-action-btn" onclick="event.stopPropagation(); downloadFile('{{ file.name }}')">
+                                    <i class="fa fa-download"></i>
+                                </button>
+                                <button class="grid-action-btn" onclick="event.stopPropagation(); deleteFile('{{ file.name }}')">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="file-icon {{ file.type.lower() if file.type else 'file' }}">
+                                {% if file.type.lower() in ['doc', 'docx'] %}
+                                    <i class="fa fa-file-word-o"></i>
+                                {% elif file.type.lower() == 'pdf' %}
+                                    <i class="fa fa-file-pdf-o"></i>
+                                {% elif file.type.lower() in ['xls', 'xlsx'] %}
+                                    <i class="fa fa-file-excel-o"></i>
+                                {% elif file.type.lower() in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                    <i class="fa fa-file-image-o"></i>
+                                {% elif file.type.lower() == 'folder' %}
+                                    <i class="fa fa-folder"></i>
+                                {% else %}
+                                    <i class="fa fa-file-o"></i>
+                                {% endif %}
+                            </div>
+                            <div class="file-name">{{ file.name }}</div>
+                            <div class="file-meta">
+                                <span>{{ (file.size / 1024)|round(1) }} KB</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-files" style="padding: 2rem; text-align: center; color: #888; grid-column: 1 / -1;">
+                        <i class="fa fa-folder-open-o" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>当前目录为空，请上传文件或创建文件夹</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 新建文件夹模态框 -->
+        <div id="new-folder-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal('new-folder-modal')">&times;</span>
+                <div class="modal-header">
+                    <h3>新建文件夹</h3>
+                </div>
+                <div class="modal-body">
+                    <form id="new-folder-form" method="post" action="{{ url_for('create_folder') }}">
+                        <div class="form-group">
+                            <label for="folder-name">文件夹名称</label>
+                            <input type="text" id="folder-name" name="folder_name" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal('new-folder-modal')">取消</button>
+                            <button type="submit" class="btn btn-primary">创建</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 删除确认模态框 -->
+        <div id="delete-confirm-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal('delete-confirm-modal')">&times;</span>
+                <div class="modal-header">
+                    <h3>确认删除</h3>
+                </div>
+                <div class="modal-body">
+                    <p>您确定要删除这个文件吗？此操作不可撤销。</p>
+                    <p id="delete-file-name" style="font-weight: bold;"></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('delete-confirm-modal')">取消</button>
+                    <form id="delete-form" method="post" action="{{ url_for('delete_file_route') }}">
+                        <input type="hidden" id="delete-filename" name="filename">
+                        <button type="submit" class="btn btn-primary">确认删除</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 合肥祥晋生技部数据管理系统 版权所有</p>
+        </div>
+    </footer>
+    
+    <script>
+        // 上传功能
+        function showUploadArea() {
+            document.getElementById('upload-area').classList.add('active');
+        }
+        
+        function hideUploadArea() {
+            document.getElementById('upload-area').classList.remove('active');
+        }
+        
+        // 显示选择的文件名
+        document.getElementById('file-input').addEventListener('change', function() {
+            const fileInput = this;
+            const selectedFile = document.getElementById('selected-file');
+            const uploadBtn = document.getElementById('upload-btn');
+            
+            if (fileInput.files.length > 0) {
+                selectedFile.textContent = `已选择: ${fileInput.files[0].name}`;
+                uploadBtn.style.display = 'inline-block';
+            } else {
+                selectedFile.textContent = '';
+                uploadBtn.style.display = 'none';
+            }
+        });
+        
+        // 拖放上传
+        const dropArea = document.getElementById('upload-area');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const fileInput = document.getElementById('file-input');
+            const selectedFile = document.getElementById('selected-file');
+            const uploadBtn = document.getElementById('upload-btn');
+            
+            fileInput.files = files;
+            
+            if (files.length > 0) {
+                selectedFile.textContent = `已选择: ${files[0].name}`;
+                uploadBtn.style.display = 'inline-block';
+            }
+        }
+        
+        // 视图切换
+        function switchView(viewType) {
+            const listView = document.getElementById('file-list-view');
+            const gridView = document.getElementById('grid-view');
+            const viewButtons = document.querySelectorAll('.view-btn');
+            
+            viewButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelector(`.view-btn[data-view="${viewType}"]`).classList.add('active');
+            
+            if (viewType === 'list') {
+                listView.style.display = 'block';
+                gridView.style.display = 'none';
+            } else {
+                listView.style.display = 'none';
+                gridView.style.display = 'grid';
+            }
+        }
+        
+        // 文件排序
+        function sortFiles() {
+            const sortType = document.getElementById('sort-select').value;
+            const [property, direction] = sortType.split('-');
+            
+            sortFileElements(property, direction);
+        }
+        
+        function sortFileElements(property, direction) {
+            const listView = document.getElementById('file-list-view');
+            const gridView = document.getElementById('grid-view');
+            
+            const listItems = Array.from(listView.querySelectorAll('.file-item'));
+            const gridItems = Array.from(gridView.querySelectorAll('.grid-item'));
+            
+            // 排序函数
+            const sortFunction = (a, b) => {
+                let valueA, valueB;
+                
+                if (property === 'name') {
+                    valueA = a.dataset.name.toLowerCase();
+                    valueB = b.dataset.name.toLowerCase();
+                } else if (property === 'size') {
+                    valueA = parseInt(a.dataset.size);
+                    valueB = parseInt(b.dataset.size);
+                } else if (property === 'date') {
+                    valueA = new Date(a.dataset.modified);
+                    valueB = new Date(b.dataset.modified);
+                }
+                
+                const multiplier = direction === 'asc' ? 1 : -1;
+                
+                if (valueA < valueB) return -1 * multiplier;
+                if (valueA > valueB) return 1 * multiplier;
+                return 0;
+            };
+            
+            // 排序列表视图
+            listItems.sort(sortFunction).forEach(item => {
+                listView.appendChild(item);
+            });
+            
+            // 排序网格视图
+            gridItems.sort(sortFunction).forEach(item => {
+                gridView.appendChild(item);
+            });
+        }
+        
+        // 模态框操作
+        function openNewFolderModal() {
+            document.getElementById('new-folder-modal').style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // 文件操作
+        function previewFile(filename) {
+            window.location.href = "{{ url_for('preview_file', filepath='') }}" + filename;
+        }
+        
+        function downloadFile(filename) {
+            window.location.href = "{{ url_for('download_file', filepath='') }}" + filename;
+        }
+        
+        function deleteFile(filename) {
+            document.getElementById('delete-file-name').textContent = filename;
+            document.getElementById('delete-filename').value = filename;
+            document.getElementById('delete-confirm-modal').style.display = 'block';
+        }
+        
+        function refreshFileList() {
+            window.location.reload();
+        }
+        
+        // 关闭模态框的事件
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('modal');
+            for (let i = 0; i < modals.length; i++) {
+                if (event.target == modals[i]) {
+                    modals[i].style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html> 
